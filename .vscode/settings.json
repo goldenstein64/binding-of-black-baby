@@ -33,6 +33,10 @@
   "javascript.suggest.completeFunctionCalls": true,
   "typescript.suggest.completeFunctionCalls": true,
 
+  "prettier.configPath": ".prettierrc.js",
+  "editor.formatOnSave": true,
+  "xml.format.preserveAttributeLineBreaks": true,
+
   // Automatically run the formatter when a JavaScript or TypeScript file is saved
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
