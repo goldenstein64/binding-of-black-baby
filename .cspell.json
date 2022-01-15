@@ -1,10 +1,13 @@
 {
     "version": "0.2",
     "words": [
+        "chargebar",
         "dbaeumer",
         "isaacscript",
         "sarisia",
+        "Spritesheet",
         "steamapps",
+        "TEARFLAG",
         "technote",
         "tstl"
     ]
