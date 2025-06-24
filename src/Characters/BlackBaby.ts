@@ -1,12 +1,19 @@
 import type { TearVariant } from "isaac-typescript-definitions";
-import { CacheFlag, ModCallback, PlayerSpriteLayer, SkinColor } from "isaac-typescript-definitions";
-import Mod from "../Mod";
-import Character from "./Character";
+import {
+  CacheFlag,
+  ModCallback,
+  PlayerSpriteLayer,
+  SkinColor,
+} from "isaac-typescript-definitions";
+import { ModCallbackCustom } from "isaacscript-common";
+import { Mod } from "../Mod";
+import { Character } from "./Character";
 
-const TEAR_VARIANT_BLACK_BABY_AXE =
-  Isaac.GetEntityVariantByName("Black Baby Axe") as TearVariant;
+const TEAR_VARIANT_BLACK_BABY_AXE = Isaac.GetEntityVariantByName(
+  "Black Baby Axe",
+) as TearVariant;
 
-export default class BlackBaby extends Character {
+export class BlackBaby extends Character {
   private readonly player: EntityPlayer;
 
   constructor(player: EntityPlayer) {
@@ -14,58 +21,63 @@ export default class BlackBaby extends Character {
     this.player = player;
   }
 
-  Load(): void {
-    this.AddCallbacks();
-    this.AddStats();
+  load(): void {
+    this.addCallbacks();
+    this.addStats();
   }
 
-  Unload(): void {
-    this.RemoveCallbacks();
+  unload(): void {
+    this.removeCallbacks();
   }
 
-  private AddCallbacks() {
-    Mod.AddCallback(ModCallback.POST_PLAYER_UPDATE, this.PostPlayerUpdate);
-    Mod.AddCallback(ModCallback.POST_TEAR_INIT, this.PostTearInit);
+  private addCallbacks() {
+    Mod.AddCallbackCustom(
+      ModCallbackCustom.POST_PLAYER_UPDATE_REORDERED,
+      this.postPlayerUpdate,
+    );
+    Mod.AddCallback(ModCallback.POST_TEAR_INIT, this.postTearInit);
     Mod.AddCallback(
       ModCallback.EVALUATE_CACHE,
-      this.GiveTearArc,
+      this.giveTearArc,
       CacheFlag.RANGE,
     );
     Mod.AddCallback(
       ModCallback.EVALUATE_CACHE,
-      this.GiveTearDelay,
+      this.giveTearDelay,
       CacheFlag.FIRE_DELAY,
     );
     Mod.AddCallback(
       ModCallback.EVALUATE_CACHE,
-      this.GiveTearDamage,
+      this.giveTearDamage,
       CacheFlag.DAMAGE,
     );
   }
 
-  private AddStats() {
+  private addStats() {
     this.player.AddCacheFlags(CacheFlag.ALL);
     this.player.EvaluateItems();
   }
 
-  private RemoveCallbacks() {
-    Mod.RemoveCallback(
-      ModCallback.POST_PLAYER_UPDATE,
-      this.PostPlayerUpdate,
+  private removeCallbacks() {
+    Mod.RemoveCallbackCustom(
+      ModCallbackCustom.POST_PLAYER_UPDATE_REORDERED,
+      this.postPlayerUpdate,
     );
-    Mod.RemoveCallback(ModCallback.POST_TEAR_INIT, this.PostTearInit);
-    Mod.RemoveCallback(ModCallback.EVALUATE_CACHE, this.GiveTearArc);
-    Mod.RemoveCallback(ModCallback.EVALUATE_CACHE, this.GiveTearDelay);
-    Mod.RemoveCallback(ModCallback.EVALUATE_CACHE, this.GiveTearDamage);
+    Mod.RemoveCallback(ModCallback.POST_TEAR_INIT, this.postTearInit);
+    Mod.RemoveCallback(ModCallback.EVALUATE_CACHE, this.giveTearArc);
+    Mod.RemoveCallback(ModCallback.EVALUATE_CACHE, this.giveTearDelay);
+    Mod.RemoveCallback(ModCallback.EVALUATE_CACHE, this.giveTearDamage);
   }
 
-  private readonly PostPlayerUpdate = (player: EntityPlayer) => {
-    if (!this.Represents(player)) {return;}
+  private readonly postPlayerUpdate = (player: EntityPlayer) => {
+    if (!this.represents(player)) {
+      return;
+    }
 
-    this.ResetAppearance();
+    this.resetAppearance();
   };
 
-  private ResetAppearance() {
+  private resetAppearance() {
     this.player.ClearCostumes();
 
     const playerSprite = this.owner.GetSprite();
@@ -86,28 +98,32 @@ export default class BlackBaby extends Character {
     }
   }
 
-  private readonly PostTearInit = (tear: EntityTear) => {
+  private readonly postTearInit = (tear: EntityTear) => {
     const spawner = tear.SpawnerEntity;
-    if (!spawner) {return;}
+    if (!spawner) {
+      return;
+    }
 
     const spawnerPlayer = spawner.ToPlayer();
-    if (!spawnerPlayer || !this.Represents(spawnerPlayer)) {return;}
+    if (!spawnerPlayer || !this.represents(spawnerPlayer)) {
+      return;
+    }
 
     tear.ChangeVariant(TEAR_VARIANT_BLACK_BABY_AXE);
   };
 
-  private readonly GiveTearArc = (player: EntityPlayer) => {
+  private readonly giveTearArc = (player: EntityPlayer) => {
     print("tear arc added");
     player.TearFallingAcceleration++;
     // player.TearFallingSpeed = 1;
   };
 
-  private readonly GiveTearDelay = (player: EntityPlayer) => {
+  private readonly giveTearDelay = (player: EntityPlayer) => {
     // player.FireDelay -= 1;
     player.MaxFireDelay += 4;
   };
 
-  private readonly GiveTearDamage = (player: EntityPlayer) => {
+  private readonly giveTearDamage = (player: EntityPlayer) => {
     player.Damage += 1.5;
   };
 }

@@ -1,10 +1,10 @@
-import { getPlayerIndex, log, ModCallbackCustom } from "isaacscript-common";
 import type { PlayerType } from "isaac-typescript-definitions";
 import { ModCallback } from "isaac-typescript-definitions";
-import BlackBaby from "./Characters/BlackBaby";
-import type Character from "./Characters/Character";
-import Mod from "./Mod";
-import BlackBabyAxe from "./Tears/BlackBabyAxe";
+import { getPlayerIndex, log, ModCallbackCustom } from "isaacscript-common";
+import { BlackBaby } from "./Characters/BlackBaby";
+import type { Character } from "./Characters/Character";
+import { Mod } from "./Mod";
+import * as BlackBabyAxe from "./Tears/BlackBabyAxe";
 
 type PlayerIndex = int;
 
@@ -20,39 +20,52 @@ class BindingOfBlackBaby {
   private readonly characters = new Map<PlayerIndex, Character>();
 
   addCallbacks() {
-    Mod.AddCallback(ModCallback.POST_PLAYER_INIT, (player) => {
-      this.loadCharacter(player);
-    });
-    Mod.AddCallbackCustom(ModCallbackCustom.POST_PLAYER_UPDATE_REORDERED, (player) => {
-      this.evaluatePlayerType(player);
-    })
-    Mod.AddCallbackCustom(ModCallbackCustom.POST_GAME_STARTED_REORDERED, () => {
-    for (const char of this.characters.values()) {
-      char.Unload();
-    }
-    this.characters.clear();
+    Mod.AddCallback(ModCallback.POST_PLAYER_INIT, this.postPlayerInit);
+    Mod.AddCallbackCustom(
+      ModCallbackCustom.POST_PLAYER_UPDATE_REORDERED,
+      this.postPlayerUpdate,
+    );
+    Mod.AddCallbackCustom(
+      ModCallbackCustom.POST_GAME_STARTED_REORDERED,
+      this.postGameStarted,
+      undefined,
+    );
+    Mod.AddCallback(ModCallback.POST_GAME_END, this.postGameEnd);
 
-    this.evalPlayerTypes.clear();
-  }, undefined);
-    Mod.AddCallback(ModCallback.POST_GAME_END, () => {
-      for (const char of this.characters.values()) {
-        char.Unload();
-      }
-      this.characters.clear();
-
-      this.evalPlayerTypes.clear();
-    });
-
-    BlackBabyAxe.StaticLoad();
+    BlackBabyAxe.load();
   }
 
   private readonly postPlayerInit = (player: EntityPlayer): void => {
     this.loadCharacter(player);
   };
 
+  private readonly postPlayerUpdate = (player: EntityPlayer) => {
+    this.evaluatePlayerType(player);
+  };
+
+  private readonly postGameStarted = () => {
+    for (const char of this.characters.values()) {
+      char.unload();
+    }
+    this.characters.clear();
+
+    this.evalPlayerTypes.clear();
+  };
+
+  private readonly postGameEnd = () => {
+    for (const char of this.characters.values()) {
+      char.unload();
+    }
+    this.characters.clear();
+
+    this.evalPlayerTypes.clear();
+  };
+
   private evaluatePlayerType(player: EntityPlayer): void {
     const oldType = this.evalPlayerTypes.get(getPlayerIndex(player));
-    if (oldType === player.GetPlayerType()) {return;}
+    if (oldType === player.GetPlayerType()) {
+      return;
+    }
 
     this.loadCharacter(player);
   }
@@ -65,7 +78,7 @@ class BindingOfBlackBaby {
     // Unload the old character in case they got morphed from another modded character.
     const oldCharacter = this.characters.get(getPlayerIndex(player));
     if (oldCharacter) {
-      oldCharacter.Unload();
+      oldCharacter.unload();
       this.characters.delete(getPlayerIndex(player));
     }
 
@@ -78,11 +91,13 @@ class BindingOfBlackBaby {
         break;
       }
 
-      default: { break; }
+      default: {
+        break;
+      }
     }
 
     if (newCharacter) {
-      newCharacter.Load();
+      newCharacter.load();
       this.characters.set(getPlayerIndex(player), newCharacter);
     }
   }

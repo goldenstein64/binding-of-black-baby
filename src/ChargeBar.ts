@@ -8,35 +8,31 @@ function clamp(value: number, min: number, max: number): number {
 
 const CHARGE_BAR_OFFSET = Vector(12, -35);
 
-enum Animations {
+enum Animation {
   CHARGING = "Charging",
   START_CHARGED = "StartCharged",
   CHARGED = "Charged",
   DISAPPEAR = "Disappear",
 }
 
-let fakeSprite: Sprite | undefined = Sprite();
-fakeSprite.Load("gfx/chargebar.anm2", true);
+const FinalAnimFrames = (() => {
+  const fakeSprite: Sprite = Sprite();
+  fakeSprite.Load("gfx/chargebar.anm2", true);
+  return {
+    CHARGING: getLastFrameOfAnimation(fakeSprite, Animation.CHARGING),
+    START_CHARGED: getLastFrameOfAnimation(fakeSprite, Animation.START_CHARGED),
+    CHARGED: getLastFrameOfAnimation(fakeSprite, Animation.CHARGED),
+    DISAPPEAR: getLastFrameOfAnimation(fakeSprite, Animation.DISAPPEAR),
+  } as const;
+})();
 
-enum FinalAnimFrames {
-  CHARGING = getLastFrameOfAnimation(fakeSprite, Animations.CHARGING),
-  START_CHARGED = getLastFrameOfAnimation(
-    fakeSprite,
-    Animations.START_CHARGED,
-  ),
-  CHARGED = getLastFrameOfAnimation(fakeSprite, Animations.CHARGED),
-  DISAPPEAR = getLastFrameOfAnimation(fakeSprite, Animations.DISAPPEAR),
-}
-
-fakeSprite = undefined;
-
-export default class ChargeBar {
+export class ChargeBar {
   private readonly chargeSprite = Sprite();
   private remainingCharge = 0;
   private totalCharge = 1;
   private frame = FinalAnimFrames.DISAPPEAR;
   private isEvenFrame = true;
-  animationName: Animations = Animations.DISAPPEAR;
+  animationName: Animation = Animation.DISAPPEAR;
 
   private readonly player: EntityPlayer;
 
@@ -45,59 +41,61 @@ export default class ChargeBar {
     this.chargeSprite.Load("gfx/chargebar.anm2", true);
   }
 
-  StartChargingFor(seconds: number) {
+  startChargingFor(seconds: number): void {
     this.totalCharge = Math.ceil(seconds * 60);
     this.remainingCharge = 0;
-    this.animationName = Animations.CHARGING;
+    this.animationName = Animation.CHARGING;
     this.frame = 0;
   }
 
-  Disappear() {
-    if (this.animationName === Animations.DISAPPEAR) {return;}
-    this.animationName = Animations.DISAPPEAR;
+  disappear(): void {
+    if (this.animationName === Animation.DISAPPEAR) {
+      return;
+    }
+    this.animationName = Animation.DISAPPEAR;
     this.frame = 0;
   }
 
-  IsIdle() {
-    return this.animationName === Animations.DISAPPEAR;
+  isIdle(): boolean {
+    return this.animationName === Animation.DISAPPEAR;
   }
 
-  IsCharged() {
+  isCharged(): boolean {
     return (
-      this.animationName === Animations.CHARGED ||
-      this.animationName === Animations.START_CHARGED
+      this.animationName === Animation.CHARGED ||
+      this.animationName === Animation.START_CHARGED
     );
   }
 
-  Update() {
+  update(): void {
     this.isEvenFrame = !this.isEvenFrame;
     switch (this.animationName) {
-      case Animations.CHARGING: {
+      case Animation.CHARGING: {
         this.updateCharging();
         break;
       }
 
-      case Animations.START_CHARGED: {
+      case Animation.START_CHARGED: {
         this.updateStartCharged();
         break;
       }
 
-      case Animations.CHARGED: {
+      case Animation.CHARGED: {
         this.updateCharged();
         break;
       }
 
-      case Animations.DISAPPEAR: {
+      case Animation.DISAPPEAR: {
         this.updateDisappear();
         break;
       }
     }
   }
 
-  UpdateRender() {
-    let room = GAME.GetRoom();
+  updateRender(): void {
+    const room = GAME.GetRoom();
 
-    let screenPosition = room
+    const screenPosition = room
       .WorldToScreenPosition(this.player.Position)
       .add(CHARGE_BAR_OFFSET);
 
@@ -105,44 +103,50 @@ export default class ChargeBar {
     this.chargeSprite.Render(screenPosition, VectorZero, VectorZero);
   }
 
-  private updateCharging() {
+  private updateCharging(): void {
     this.remainingCharge++;
 
     if (this.remainingCharge < this.totalCharge) {
-      let ratio = this.remainingCharge / this.totalCharge;
+      const ratio = this.remainingCharge / this.totalCharge;
       this.frame = clamp(
         Math.floor(FinalAnimFrames.CHARGING * ratio + 0.5),
         0,
         FinalAnimFrames.CHARGING,
       );
     } else {
-      this.animationName = Animations.START_CHARGED;
+      this.animationName = Animation.START_CHARGED;
       this.frame = 0;
     }
   }
 
-  private updateStartCharged() {
-    if (this.isEvenFrame) {return;}
+  private updateStartCharged(): void {
+    if (this.isEvenFrame) {
+      return;
+    }
     if (this.frame < FinalAnimFrames.START_CHARGED) {
       this.frame++;
     } else {
-      this.animationName = Animations.CHARGED;
+      this.animationName = Animation.CHARGED;
     }
   }
 
-  private updateCharged() {
-    if (this.isEvenFrame) {return;}
+  private updateCharged(): void {
+    if (this.isEvenFrame) {
+      return;
+    }
     this.frame = (this.frame % FinalAnimFrames.CHARGED) + 1;
   }
 
-  private updateDisappear() {
-    if (this.isEvenFrame) {return;}
+  private updateDisappear(): void {
+    if (this.isEvenFrame) {
+      return;
+    }
     if (this.frame < FinalAnimFrames.DISAPPEAR) {
       this.frame++;
     }
   }
 
-  Remove() {
+  remove(): void {
     this.chargeSprite.Reset();
   }
 }

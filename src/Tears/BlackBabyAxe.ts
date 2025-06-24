@@ -1,42 +1,44 @@
 import type { TearVariant } from "isaac-typescript-definitions";
-import { ModCallback, EntityType, SoundEffect, EffectVariant, TearFlag } from "isaac-typescript-definitions";
-import Mod from "../Mod";
+import {
+  EffectVariant,
+  EntityType,
+  ModCallback,
+  SoundEffect,
+  TearFlag,
+} from "isaac-typescript-definitions";
 import { spawnEffect } from "isaacscript-common";
+import { Mod } from "../Mod";
 
 const SFX_MANAGER = SFXManager();
 
-const TEAR_VARIANT_BLACK_BABY_AXE =
-  Isaac.GetEntityVariantByName("Black Baby Axe") as TearVariant;
+const TEAR_VARIANT_BLACK_BABY_AXE = Isaac.GetEntityVariantByName(
+  "Black Baby Axe",
+) as TearVariant;
 
-export default class BlackBabyAxe {
-  static StaticLoad(): void {
-    Mod.AddCallback(
-      ModCallback.POST_ENTITY_REMOVE,
-      BlackBabyAxe.PostEntityRemove,
-      EntityType.TEAR,
-    );
+function postEntityRemove(entity: Entity) {
+  const tear = entity.ToTear();
+
+  if (tear === undefined || tear.Variant !== TEAR_VARIANT_BLACK_BABY_AXE) {
+    return;
   }
 
-  static StaticUnload(): void {
-    Mod.RemoveCallback(
-      ModCallback.POST_ENTITY_REMOVE,
-      BlackBabyAxe.PostEntityRemove,
-    );
+  const flagsLeft = tear.TearFlags.band(TearFlag.EXPLOSIVE);
+  if (flagsLeft !== TearFlag.NORMAL) {
+    return;
   }
 
-  private static readonly PostEntityRemove = (entity: Entity) => {
-    const tear = entity.ToTear();
+  spawnEffect(EffectVariant.SCYTHE_BREAK, 0, tear.Position);
+  SFX_MANAGER.Play(SoundEffect.SCYTHE_BREAK);
+}
 
-    if (tear === undefined || tear.Variant !== TEAR_VARIANT_BLACK_BABY_AXE) {
-      return;
-    }
+export function load(): void {
+  Mod.AddCallback(
+    ModCallback.POST_ENTITY_REMOVE,
+    postEntityRemove,
+    EntityType.TEAR,
+  );
+}
 
-    const flagsLeft = tear.TearFlags.band(TearFlag.EXPLOSIVE);
-    if (flagsLeft !== TearFlag.NORMAL) {
-      return;
-    }
-
-    spawnEffect(EffectVariant.SCYTHE_BREAK, 0, tear.Position)
-    SFX_MANAGER.Play(SoundEffect.SCYTHE_BREAK);
-  };
+export function unload(): void {
+  Mod.RemoveCallback(ModCallback.POST_ENTITY_REMOVE, postEntityRemove);
 }

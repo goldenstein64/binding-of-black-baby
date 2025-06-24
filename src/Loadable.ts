@@ -1,5 +1,4 @@
-export default interface Loadable {
-  Load(): void;
-
-  Unload(): void;
+export interface Loadable {
+  load: () => void;
+  unload: () => void;
 }
