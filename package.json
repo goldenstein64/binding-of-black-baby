@@ -21,7 +21,8 @@
   },
   "dependencies": {
     "isaac-typescript-definitions": "^42.2.0",
-    "isaacscript-common": "^87.5.0"
+    "isaacscript-common": "^87.5.0",
+    "prettier": "^3.6.0"
   },
   "devDependencies": {
     "isaacscript": "^5.2.4",

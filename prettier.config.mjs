@@ -34,6 +34,12 @@ const config = {
         printWidth: 1_000_000,
       },
     },
+    {
+      files: ["**/*.ts"],
+      options: {
+        parser: "typescript",
+      },
+    },
   ],
 };
 
