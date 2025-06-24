@@ -8,12 +8,12 @@
       "type": "shell",
       "group": {
         "kind": "test",
-        "isDefault": true
+        "isDefault": true,
       },
       "command": "npx isaacscript",
       "runOptions": {
-        "runOn": "folderOpen"
-      }
-    }
-  ]
+        "runOn": "folderOpen",
+      },
+    },
+  ],
 }

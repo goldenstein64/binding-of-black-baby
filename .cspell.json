@@ -1,19 +1,29 @@
 {
-    "version": "0.2",
-    "words": [
-        "chargebar",
-        "dbaeumer",
-        "FIREDELAY",
-        "isaacscript",
-        "sarisia",
-        "SHOOTDOWN",
-        "SHOOTLEFT",
-        "SHOOTRIGHT",
-        "SHOOTUP",
-        "Spritesheet",
-        "steamapps",
-        "TEARFLAG",
-        "technote",
-        "tstl"
-    ]
+  "version": "0.2",
+  "words": [
+    "ChargeBar",
+    "chargebar",
+    "contentfolder",
+    "dbaeumer",
+    "FIREDELAY",
+    "goldenstein",
+    "isaacscript",
+    "nameimage",
+    "nameimageroot",
+    "portraitroot",
+    "publishedfileid",
+    "sarisia",
+    "SHOOTDOWN",
+    "SHOOTLEFT",
+    "SHOOTRIGHT",
+    "SHOOTUP",
+    "Spritesheet",
+    "Spritesheets",
+    "steamapps",
+    "TEARFLAG",
+    "technote",
+    "trtv",
+    "tstl",
+    "workshopitem"
+  ]
 }

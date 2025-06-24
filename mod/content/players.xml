@@ -1,11 +1,3 @@
 <players root="gfx/characters/costumes/" portraitroot="gfx/ui/stage/" nameimageroot="gfx/ui/boss/">
-  <player
-    name="Black Baby"
-    skin="Character_BlackBaby.png"
-    hp="6"
-    nameimage="PlayerName_BlackBaby.png"
-    portrait="PlayerPortrait_BlackBaby.png"
-    skinColor="-1"
-    birthright="#ISAAC_BIRTHRIGHT"
-  />
+  <player name="Black Baby" skin="Character_BlackBaby.png" hp="6" nameimage="PlayerName_BlackBaby.png" portrait="PlayerPortrait_BlackBaby.png" skinColor="-1" birthright="#ISAAC_BIRTHRIGHT" />
 </players>
