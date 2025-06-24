@@ -26,6 +26,7 @@ const FinalAnimFrames = (() => {
   } as const;
 })();
 
+// ts-prune-ignore-next
 export class ChargeBar {
   private readonly chargeSprite = Sprite();
   private remainingCharge = 0;

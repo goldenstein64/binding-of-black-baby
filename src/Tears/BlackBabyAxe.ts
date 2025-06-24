@@ -39,6 +39,7 @@ export function load(): void {
   );
 }
 
+// ts-prune-ignore-next
 export function unload(): void {
   Mod.RemoveCallback(ModCallback.POST_ENTITY_REMOVE, postEntityRemove);
 }
