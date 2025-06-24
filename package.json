@@ -1,7 +1,7 @@
 {
-  "name": "binding-of-black-baby",
-  "version": "0.0.1",
-  "description": "A mod for The Binding of Isaac: Repentance",
+  "name": "binding-of-black-baby-rewrite",
+  "version": "0.0.0",
+  "description": "A mod for The Binding of Isaac: Repentance.",
   "keywords": [
     "isaac",
     "mod",
@@ -10,10 +10,23 @@
     "repentance"
   ],
   "license": "GPL-3.0",
+  "type": "module",
+  "scripts": {
+    "build": "tstl",
+    "lint": "tsx ./scripts/lint.ts",
+    "nuke": "isaacscript nuke",
+    "publish": "isaacscript publish",
+    "start": "isaacscript monitor",
+    "update": "isaacscript update"
+  },
   "dependencies": {
-    "isaac-typescript-definitions": "^1.0.330",
-    "isaacscript": "^1.1.71",
-    "isaacscript-common": "^1.0.591",
-    "isaacscript-lint": "^1.0.77"
+    "isaac-typescript-definitions": "^42.2.0",
+    "isaacscript-common": "^87.5.0"
+  },
+  "devDependencies": {
+    "isaacscript": "^5.2.4",
+    "isaacscript-lint": "^7.1.0",
+    "typescript": "5.8.2",
+    "typescript-to-lua": "^1.31.2"
   }
 }

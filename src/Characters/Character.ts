@@ -1,14 +1,17 @@
-import { getPlayerIndex } from "isaacscript-common";
-import Loadable from "../Loadable";
+import type Loadable from "../Loadable";
 
 export default abstract class Character implements Loadable {
-  constructor(protected player: EntityPlayer) {}
+  protected readonly owner: Entity;
+
+  constructor(owner: Entity) {
+    this.owner = owner;
+  }
 
   abstract Load(): void;
 
   abstract Unload(): void;
 
-  protected represents(player: EntityPlayer): boolean {
-    return getPlayerIndex(player) === getPlayerIndex(this.player);
+  protected Represents(entity: Entity): boolean {
+    return GetPtrHash(entity) === GetPtrHash(this.owner);
   }
 }

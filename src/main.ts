@@ -1,6 +1,8 @@
-import { getPlayerIndex, printConsole } from "isaacscript-common";
+import { getPlayerIndex, log, ModCallbackCustom } from "isaacscript-common";
+import type { PlayerType } from "isaac-typescript-definitions";
+import { ModCallback } from "isaac-typescript-definitions";
 import BlackBaby from "./Characters/BlackBaby";
-import Character from "./Characters/Character";
+import type Character from "./Characters/Character";
 import Mod from "./Mod";
 import BlackBabyAxe from "./Tears/BlackBabyAxe";
 
@@ -13,60 +15,70 @@ const PLAYER_TYPE_TAINTED_BLACK_BABY = Isaac.GetPlayerTypeByName(
 );
 
 class BindingOfBlackBaby {
-  private evalPlayerTypes = new Map<PlayerIndex, PlayerType>();
+  private readonly evalPlayerTypes = new Map<PlayerIndex, PlayerType>();
 
-  private characters = new Map<PlayerIndex, Character>();
+  private readonly characters = new Map<PlayerIndex, Character>();
 
-  constructor() {}
+  addCallbacks() {
+    Mod.AddCallback(ModCallback.POST_PLAYER_INIT, (player) => {
+      this.loadCharacter(player);
+    });
+    Mod.AddCallbackCustom(ModCallbackCustom.POST_PLAYER_UPDATE_REORDERED, (player) => {
+      this.evaluatePlayerType(player);
+    })
+    Mod.AddCallbackCustom(ModCallbackCustom.POST_GAME_STARTED_REORDERED, () => {
+    for (const char of this.characters.values()) {
+      char.Unload();
+    }
+    this.characters.clear();
 
-  Init() {
-    this.AddCallbacks();
+    this.evalPlayerTypes.clear();
+  }, undefined);
+    Mod.AddCallback(ModCallback.POST_GAME_END, () => {
+      for (const char of this.characters.values()) {
+        char.Unload();
+      }
+      this.characters.clear();
 
-    printConsole(`${Mod.Name} initialized.`);
-  }
-
-  private AddCallbacks() {
-    Mod.AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, this.PostPlayerInit);
-    Mod.AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, this.PostPlayerUpdate);
-    Mod.AddCallback(ModCallbacks.MC_POST_GAME_END, this.PostGameEnd);
+      this.evalPlayerTypes.clear();
+    });
 
     BlackBabyAxe.StaticLoad();
   }
 
-  private PostPlayerInit = (player: EntityPlayer): void => {
-    this.LoadCharacter(player);
-  };
-
-  private PostPlayerUpdate = (player: EntityPlayer): void => {
-    this.evaluatePlayerType(player);
+  private readonly postPlayerInit = (player: EntityPlayer): void => {
+    this.loadCharacter(player);
   };
 
   private evaluatePlayerType(player: EntityPlayer): void {
-    let oldType = this.evalPlayerTypes.get(getPlayerIndex(player));
-    if (oldType === player.GetPlayerType()) return;
+    const oldType = this.evalPlayerTypes.get(getPlayerIndex(player));
+    if (oldType === player.GetPlayerType()) {return;}
 
-    this.LoadCharacter(player);
+    this.loadCharacter(player);
   }
 
-  private LoadCharacter(player: EntityPlayer): void {
-    let playerType = player.GetPlayerType();
+  private loadCharacter(player: EntityPlayer): void {
+    const playerType = player.GetPlayerType();
 
     this.evalPlayerTypes.set(getPlayerIndex(player), playerType);
 
-    // unload the old character in case they got morphed from another modded
-    // character
-    let oldCharacter = this.characters.get(getPlayerIndex(player));
+    // Unload the old character in case they got morphed from another modded character.
+    const oldCharacter = this.characters.get(getPlayerIndex(player));
     if (oldCharacter) {
       oldCharacter.Unload();
       this.characters.delete(getPlayerIndex(player));
     }
 
-    // load in the new character
-    let newCharacter: Character | undefined = undefined;
+    // Load in the new character.
+    let newCharacter: Character | undefined;
     switch (playerType) {
       case PLAYER_TYPE_BLACK_BABY:
-      case PLAYER_TYPE_TAINTED_BLACK_BABY:
+      case PLAYER_TYPE_TAINTED_BLACK_BABY: {
         newCharacter = new BlackBaby(player);
+        break;
+      }
+
+      default: { break; }
     }
 
     if (newCharacter) {
@@ -74,19 +86,10 @@ class BindingOfBlackBaby {
       this.characters.set(getPlayerIndex(player), newCharacter);
     }
   }
-
-  private PostGameEnd = () => {
-    for (let char of this.characters.values()) {
-      char.Unload();
-    }
-    this.characters.clear();
-
-    this.evalPlayerTypes.clear();
-  };
 }
 
 export function main(): void {
   const bindingOfBlackBaby = new BindingOfBlackBaby();
-
-  bindingOfBlackBaby.Init();
+  bindingOfBlackBaby.addCallbacks();
+  log(`${Mod.Name} initialized.`);
 }

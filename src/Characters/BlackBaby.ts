@@ -1,97 +1,113 @@
-import { getPlayerIndex } from "isaacscript-common";
+import type { TearVariant } from "isaac-typescript-definitions";
+import { CacheFlag, ModCallback, PlayerSpriteLayer, SkinColor } from "isaac-typescript-definitions";
 import Mod from "../Mod";
 import Character from "./Character";
 
-const GAME = Game();
-
-const chargeSprite = Sprite();
-chargeSprite.Load("gfx/chargebar.anm2", true);
-chargeSprite.LoadGraphics();
-
 const TEAR_VARIANT_BLACK_BABY_AXE =
-  Isaac.GetEntityVariantByName("Black Baby Axe");
-
-function toChargingFrame(value: number): number {
-  return Math.ceil(100 * value);
-}
+  Isaac.GetEntityVariantByName("Black Baby Axe") as TearVariant;
 
 export default class BlackBaby extends Character {
-  private chargeCounter = 0;
+  private readonly player: EntityPlayer;
 
   constructor(player: EntityPlayer) {
     super(player);
+    this.player = player;
   }
 
-  Load() {
+  Load(): void {
     this.AddCallbacks();
-
     this.AddStats();
   }
 
-  Unload() {
+  Unload(): void {
     this.RemoveCallbacks();
   }
 
   private AddCallbacks() {
-    Mod.AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, this.PostPlayerUpdate);
-    Mod.AddCallback(ModCallbacks.MC_POST_TEAR_INIT, this.PostTearInit);
-    Mod.AddCallback(ModCallbacks.MC_EVALUATE_CACHE, this.GiveTearArc);
+    Mod.AddCallback(ModCallback.POST_PLAYER_UPDATE, this.PostPlayerUpdate);
+    Mod.AddCallback(ModCallback.POST_TEAR_INIT, this.PostTearInit);
+    Mod.AddCallback(
+      ModCallback.EVALUATE_CACHE,
+      this.GiveTearArc,
+      CacheFlag.RANGE,
+    );
+    Mod.AddCallback(
+      ModCallback.EVALUATE_CACHE,
+      this.GiveTearDelay,
+      CacheFlag.FIRE_DELAY,
+    );
+    Mod.AddCallback(
+      ModCallback.EVALUATE_CACHE,
+      this.GiveTearDamage,
+      CacheFlag.DAMAGE,
+    );
   }
 
   private AddStats() {
-    this.player.AddCacheFlags(CacheFlag.CACHE_TEARFLAG);
+    this.player.AddCacheFlags(CacheFlag.ALL);
     this.player.EvaluateItems();
   }
 
   private RemoveCallbacks() {
     Mod.RemoveCallback(
-      ModCallbacks.MC_POST_PLAYER_UPDATE,
+      ModCallback.POST_PLAYER_UPDATE,
       this.PostPlayerUpdate,
     );
-
-    Mod.RemoveCallback(ModCallbacks.MC_POST_TEAR_INIT, this.PostTearInit);
-    Mod.RemoveCallback(ModCallbacks.MC_EVALUATE_CACHE, this.GiveTearArc);
+    Mod.RemoveCallback(ModCallback.POST_TEAR_INIT, this.PostTearInit);
+    Mod.RemoveCallback(ModCallback.EVALUATE_CACHE, this.GiveTearArc);
+    Mod.RemoveCallback(ModCallback.EVALUATE_CACHE, this.GiveTearDelay);
+    Mod.RemoveCallback(ModCallback.EVALUATE_CACHE, this.GiveTearDamage);
   }
 
-  private PostPlayerUpdate = (player: EntityPlayer) => {
-    if (!this.represents(player)) return;
+  private readonly PostPlayerUpdate = (player: EntityPlayer) => {
+    if (!this.Represents(player)) {return;}
 
-    player.ClearCostumes();
-
-    let playerSprite = player.GetSprite();
-    if (player.GetBodyColor() !== SkinColor.SKIN_WHITE) {
-      playerSprite.ReplaceSpritesheet(
-        PlayerSpriteLayer.SPRITE_BODY,
-        "gfx/characters/costumes/Character_BlackBaby.png",
-      );
-      playerSprite.LoadGraphics();
-    }
-
-    if (player.GetHeadColor() !== SkinColor.SKIN_WHITE) {
-      playerSprite.ReplaceSpritesheet(
-        PlayerSpriteLayer.SPRITE_HEAD,
-        "gfx/characters/costumes/Character_BlackBaby.png",
-      );
-      playerSprite.LoadGraphics();
-    }
+    this.ResetAppearance();
   };
 
-  private PostTearInit = (tear: EntityTear) => {
-    let spawner = tear.SpawnerEntity;
-    if (!spawner) return;
+  private ResetAppearance() {
+    this.player.ClearCostumes();
 
-    let spawnerPlayer = spawner.ToPlayer();
-    if (!spawnerPlayer) return;
+    const playerSprite = this.owner.GetSprite();
+    if (this.player.GetBodyColor() !== SkinColor.WHITE) {
+      playerSprite.ReplaceSpritesheet(
+        PlayerSpriteLayer.BODY,
+        "gfx/characters/costumes/Character_BlackBaby.png",
+      );
+      playerSprite.LoadGraphics();
+    }
 
-    if (getPlayerIndex(spawnerPlayer) !== getPlayerIndex(this.player)) return;
+    if (this.player.GetHeadColor() !== SkinColor.WHITE) {
+      playerSprite.ReplaceSpritesheet(
+        PlayerSpriteLayer.HEAD,
+        "gfx/characters/costumes/Character_BlackBaby.png",
+      );
+      playerSprite.LoadGraphics();
+    }
+  }
+
+  private readonly PostTearInit = (tear: EntityTear) => {
+    const spawner = tear.SpawnerEntity;
+    if (!spawner) {return;}
+
+    const spawnerPlayer = spawner.ToPlayer();
+    if (!spawnerPlayer || !this.Represents(spawnerPlayer)) {return;}
 
     tear.ChangeVariant(TEAR_VARIANT_BLACK_BABY_AXE);
   };
 
-  private GiveTearArc = (player: EntityPlayer, flags: CacheFlag) => {
-    if ((flags & CacheFlag.CACHE_TEARFLAG) !== 0) {
-      player.TearFallingAcceleration = 1;
-      player.TearFallingSpeed = 30;
-    }
+  private readonly GiveTearArc = (player: EntityPlayer) => {
+    print("tear arc added");
+    player.TearFallingAcceleration++;
+    // player.TearFallingSpeed = 1;
+  };
+
+  private readonly GiveTearDelay = (player: EntityPlayer) => {
+    // player.FireDelay -= 1;
+    player.MaxFireDelay += 4;
+  };
+
+  private readonly GiveTearDamage = (player: EntityPlayer) => {
+    player.Damage += 1.5;
   };
 }

@@ -1,39 +1,42 @@
+import type { TearVariant } from "isaac-typescript-definitions";
+import { ModCallback, EntityType, SoundEffect, EffectVariant, TearFlag } from "isaac-typescript-definitions";
 import Mod from "../Mod";
+import { spawnEffect } from "isaacscript-common";
 
 const SFX_MANAGER = SFXManager();
 
 const TEAR_VARIANT_BLACK_BABY_AXE =
-  Isaac.GetEntityVariantByName("Black Baby Axe");
+  Isaac.GetEntityVariantByName("Black Baby Axe") as TearVariant;
 
 export default class BlackBabyAxe {
   static StaticLoad(): void {
     Mod.AddCallback(
-      ModCallbacks.MC_POST_ENTITY_REMOVE,
+      ModCallback.POST_ENTITY_REMOVE,
       BlackBabyAxe.PostEntityRemove,
-      EntityType.ENTITY_TEAR,
+      EntityType.TEAR,
     );
   }
 
   static StaticUnload(): void {
     Mod.RemoveCallback(
-      ModCallbacks.MC_POST_ENTITY_REMOVE,
+      ModCallback.POST_ENTITY_REMOVE,
       BlackBabyAxe.PostEntityRemove,
     );
   }
 
-  private static PostEntityRemove = (entity: Entity) => {
-    let tear = entity.ToTear()!;
+  private static readonly PostEntityRemove = (entity: Entity) => {
+    const tear = entity.ToTear();
 
-    if (tear.Variant !== TEAR_VARIANT_BLACK_BABY_AXE) return;
-    let effect = Isaac.Spawn(
-      EntityType.ENTITY_EFFECT,
-      EffectVariant.SCYTHE_BREAK,
-      0,
-      tear.Position,
-      Vector(0, 0),
-      tear,
-    ).ToEffect()!;
+    if (tear === undefined || tear.Variant !== TEAR_VARIANT_BLACK_BABY_AXE) {
+      return;
+    }
 
-    SFX_MANAGER.Play(SoundEffect.SOUND_SCYTHE_BREAK);
+    const flagsLeft = tear.TearFlags.band(TearFlag.EXPLOSIVE);
+    if (flagsLeft !== TearFlag.NORMAL) {
+      return;
+    }
+
+    spawnEffect(EffectVariant.SCYTHE_BREAK, 0, tear.Position)
+    SFX_MANAGER.Play(SoundEffect.SCYTHE_BREAK);
   };
 }
